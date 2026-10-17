@@ -1,5 +1,19 @@
 # ClaimGuard History
 
+## 2026-10-17 21:20 +05:30 — Comprehensive end-to-end testing and frontend wiring
+
+- Changed: Refined [`src/App.jsx`](file:///home/dani/Projects/clg/IBM_Datathon/src/App.jsx) and [`src/components/ClaimDetails.jsx`](file:///home/dani/Projects/clg/IBM_Datathon/src/components/ClaimDetails.jsx) to directly support backend contract fields: `triage_score`, `anomaly_evidence.factors`, `inference_latency_ms`, single `diagnosis_code`/`procedure_code`, `rule_id` findings, and initial claims loading on mount via `GET /api/claims`.
+- Reason: Complete alignment across React frontend components and FastAPI REST/WebSocket backend streams.
+- Validation/evidence:
+  - Verified `backend/__init__.py` and clean package imports.
+  - Full pytest test suite passing (15/15 unit and integration tests).
+  - Started Uvicorn server with `PYTHONPATH=.` on `http://127.0.0.1:8000`.
+  - Confirmed `/health` returns `200 OK` with `status: HEALTHY`.
+  - Executed live integration test with simultaneous WebSocket listener (`/ws/claims`) and REST claim ingestion (`POST /api/claims`), verifying receipt of `CLAIM_SCORED` and `CLAIM_ACTIONED` events.
+  - Tested synthetic stream generation via `POST /api/stream/start`.
+  - Production frontend build verified (`npx vite build` succeeded in 2.46s).
+- Remaining limitations: Real IBM LinuxONE inference VM validation scheduled for final demonstration.
+
 ## 2026-10-17 21:10 +05:30 — Frontend and backend unified verification
 
 - Changed: Integrated Developer 1 (`frontend-ui`) and Developer 2 (`backend-engine`) branches into a unified working tree. Unified `.gitignore` across Python, SQLite, Vite, and Node artifacts.
