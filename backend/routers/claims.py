@@ -47,7 +47,7 @@ def list_claims(
     query = db.query(ClaimModel).order_by(ClaimModel.created_at.desc())
     if category:
         query = query.filter(ClaimModel.category == category.upper())
-    
+
     claims = query.limit(limit).all()
     results = []
     for c in claims:
@@ -61,7 +61,7 @@ def list_claims(
                 passed=f.passed,
             ) for f in c.findings
         ]
-        
+
         # Parse anomaly evidence
         anomaly_evidence = AnomalyEvidence()
         if c.anomaly_evidence_json:

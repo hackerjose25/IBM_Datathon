@@ -71,7 +71,7 @@ class ClaimRecord(BaseModel):
     claim_amount: float
     service_lines_count: int
     injected_scenario: Optional[str] = "normal"
-    
+
     # Engine outputs
     processing_status: Literal["PROCESSED", "ERROR", "PENDING"] = "PROCESSED"
     category: Literal["READY", "CORRECTION", "REVIEW"]
@@ -81,7 +81,7 @@ class ClaimRecord(BaseModel):
     execution_target: str = "LOCAL_MOCK"
     latency_p50_ms: float = 0.0
     latency_p95_ms: float = 0.0
-    
+
     # Review workflow state
     review_state: Literal["PENDING", "ACKNOWLEDGED", "RESOLVED"] = "PENDING"
     reviewer_decision: Optional[ReviewerDecision] = None

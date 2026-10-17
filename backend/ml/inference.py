@@ -186,14 +186,14 @@ class ClaimAnomalyDetector:
         Calculates raw score, normalized triage priority component, and explainable factors.
         """
         start_time = time.perf_counter()
-        
+
         try:
             features = self.extract_features(claim)
-            
+
             # decision_function yields: negative for anomalies, positive for normal
             raw_score = float(self.model.decision_function(features)[0])
             pred_label = int(self.model.predict(features)[0]) # -1: anomaly, 1: normal
-            
+
             # Map raw score (-0.35 to +0.25 typically) into 0-100 anomaly intensity
             # More negative raw_score -> higher anomaly intensity
             normalized = float(np.clip((0.2 - raw_score) / 0.5 * 100.0, 0.0, 100.0))
