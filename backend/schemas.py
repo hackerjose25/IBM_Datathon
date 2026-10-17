@@ -15,7 +15,7 @@ class ClaimInput(BaseModel):
     submission_timestamp: str = Field(..., description="ISO 8601 timestamp of claim submission")
     diagnosis_code: Optional[str] = Field(None, description="Primary ICD-10 diagnosis code")
     procedure_code: Optional[str] = Field(None, description="Primary CPT/HCPCS procedure code")
-    claim_amount: float = Field(..., description="Total billed amount in USD")
+    claim_amount: float = Field(..., allow_inf_nan=False, description="Total billed amount in USD")
     service_lines_count: int = Field(1, description="Number of service line items")
     injected_scenario: Optional[str] = Field("normal", description="Test scenario indicator: normal, high_amount, duplicate, missing_field")
 
@@ -39,6 +39,7 @@ class ValidationFinding(BaseModel):
 
 
 class AnomalyEvidence(BaseModel):
+    inference_error: Optional[str] = None
     is_anomaly: bool = False
     model_score: float = 0.0          # Raw model output (decision_function or distance)
     normalized_score: float = 0.0     # 0 - 100 scaled anomaly intensity

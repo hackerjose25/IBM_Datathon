@@ -1,5 +1,6 @@
 """FastAPI application entrypoint for ClaimGuard."""
 import logging
+import platform
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -49,13 +50,14 @@ def health_check():
     """Health check endpoint explicitly returning execution environment target and latency percentiles."""
     metrics = detector.get_latency_metrics()
     return {
-        "status": "HEALTHY",
+        "status": "HEALTHY" if detector.model is not None else "DEGRADED",
         "service": settings.PROJECT_NAME,
         "version": settings.VERSION,
         "execution_target": settings.EXECUTION_TARGET,
         "database": settings.DATABASE_URL.split("///")[-1],
         "model_version": detector.model_version,
         "model_loaded_from_disk": detector.model_loaded_from_disk,
+        "machine_architecture": platform.machine(),
         "latency_p50_ms": metrics["p50_ms"],
         "latency_p95_ms": metrics["p95_ms"],
         "latency_metrics": metrics,

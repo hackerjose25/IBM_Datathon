@@ -1,6 +1,7 @@
 """Synthetic claim stream generator for realistic testing and the 100-claim demo stream."""
 import asyncio
 import random
+import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Optional, List
 from backend.schemas import ClaimInput
@@ -20,6 +21,8 @@ class ClaimStreamGenerator:
         self._running = False
         self._task: Optional[asyncio.Task] = None
         self._claim_counter = 1000
+        self._random = random.Random(42)
+        self._run_id = uuid.uuid4().hex[:8].upper()
 
     @property
     def is_running(self) -> bool:
@@ -27,27 +30,27 @@ class ClaimStreamGenerator:
 
     def generate_single_claim(self, scenario: str = "normal") -> ClaimInput:
         self._claim_counter += 1
-        claim_id = f"CLM-2026-{self._claim_counter:04d}"
-        patient_id = f"PAT-{random.randint(1000, 9999)}"
-        provider_id = f"PRV-{random.randint(100, 999)}"
+        claim_id = f"CLM-{self._run_id}-{self._claim_counter:04d}"
+        patient_id = f"PAT-{self._random.randint(1000, 9999)}"
+        provider_id = f"PRV-{self._random.randint(100, 999)}"
         now = datetime.now(timezone.utc)
-        service_date = (now - timedelta(days=random.randint(1, 14))).strftime("%Y-%m-%d")
+        service_date = (now - timedelta(days=self._random.randint(1, 14))).strftime("%Y-%m-%d")
         submission_timestamp = now.isoformat()
 
-        diag = random.choice(DIAGNOSIS_CODES)
-        proc = random.choice(PROCEDURE_CODES)
-        lines = random.randint(1, 3)
+        diag = self._random.choice(DIAGNOSIS_CODES)
+        proc = self._random.choice(PROCEDURE_CODES)
+        lines = self._random.randint(1, 3)
 
         if scenario == "high_amount":
-            amount = round(random.uniform(18000.0, 45000.0), 2)
-            lines = random.randint(5, 12)
+            amount = round(self._random.uniform(18000.0, 45000.0), 2)
+            lines = self._random.randint(5, 12)
         elif scenario == "missing_field":
             diag = None
-            amount = round(random.uniform(150.0, 900.0), 2)
+            amount = round(self._random.uniform(150.0, 900.0), 2)
         elif scenario == "invalid_amount":
             amount = -50.00
         else: # normal
-            amount = round(random.uniform(85.0, 1850.0), 2)
+            amount = round(self._random.uniform(85.0, 1850.0), 2)
 
         return ClaimInput(
             claim_id=claim_id,
@@ -71,7 +74,7 @@ class ClaimStreamGenerator:
                     break
 
                 # 85% normal, 7% high amount, 5% missing field, 3% invalid amount
-                roll = random.random()
+                roll = self._random.random()
                 if roll < 0.85:
                     scenario = "normal"
                 elif roll < 0.92:
@@ -115,6 +118,9 @@ class ClaimStreamGenerator:
 
     def start(self, count: int = 100, delay_seconds: float = 1.0):
         if not self._running:
+            self._running = True
+            self._random.seed(42)
+            self._run_id = uuid.uuid4().hex[:8].upper()
             self._task = asyncio.create_task(self.run_stream(count=count, delay_seconds=delay_seconds))
 
     def stop(self):

@@ -1,0 +1,35 @@
+{
+  "https_verified": true,
+  "cors_origin": "https://claimguard-dun.vercel.app",
+  "websocket_events": 100,
+  "all_processed": true,
+  "wait_and_stream_seconds": 109.035,
+  "reviewed_claim_id": "CLM-40254990-1215",
+  "saved_review_restored": true,
+  "blocked_direct_ingestion": true,
+  "blocked_docs": true,
+  "rejected_other_browser_origin": true,
+  "environment": {
+    "status": "HEALTHY",
+    "service": "ClaimGuard",
+    "version": "0.1.0",
+    "execution_target": "IBM_LINUXONE",
+    "database": "/home/linux1/claimguard/claimguard.db",
+    "model_version": "1.0.0",
+    "model_loaded_from_disk": true,
+    "machine_architecture": "s390x",
+    "latency_p50_ms": 2.404,
+    "latency_p95_ms": 3.161,
+    "latency_metrics": {
+      "count": 400,
+      "mean_ms": 2.589,
+      "p50_ms": 2.404,
+      "p95_ms": 3.161,
+      "p99_ms": 4.059,
+      "min_ms": 2.12,
+      "max_ms": 43.267,
+      "execution_target": "IBM_LINUXONE"
+    }
+  },
+  "limitations": "Public shared synthetic demo; no authenticated reviewer identity. Elapsed time includes waiting for the human/UI start action and paced streaming; not a throughput benchmark."
+}

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Activity, ShieldCheck } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Activity, ArrowUpRight, ShieldCheck } from 'lucide-react'
 import ClaimDetails from './components/ClaimDetails.jsx'
 import ClaimTable from './components/ClaimTable.jsx'
 import { useClaimsSocket } from './hooks/useClaimsSocket.js'
@@ -39,6 +39,27 @@ function normalizeScoredEvent(event) {
 }
 
 export default function App() {
+  const [view, setView] = useState(() => window.location.hash === '#dashboard' ? 'dashboard' : 'landing')
+  const videoRef = useRef(null)
+  useEffect(() => {
+    const syncView = () => setView(window.location.hash === '#dashboard' ? 'dashboard' : 'landing')
+    window.addEventListener('hashchange', syncView)
+    return () => window.removeEventListener('hashchange', syncView)
+  }, [])
+  useEffect(() => {
+    window.scrollTo(0, 0)
+    if (view !== 'landing') return
+    const video = videoRef.current
+    const preference = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const sync = () => {
+      if (!video) return
+      if (preference.matches) { video.pause(); video.currentTime = 0 }
+      else video.play().catch(() => {})
+    }
+    preference.addEventListener('change', sync)
+    sync()
+    return () => preference.removeEventListener('change', sync)
+  }, [view])
   const [claims, setClaims] = useState([])
   const [selectedId, setSelectedId] = useState(null)
   const [streamError, setStreamError] = useState('')
@@ -49,7 +70,7 @@ export default function App() {
 
   // Load existing claims on initial mount
   useEffect(() => {
-    fetch(`${API_URL}/api/claims`)
+    fetch(`${API_URL}/api/claims?limit=500`)
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
@@ -81,6 +102,8 @@ export default function App() {
         reviewer_id: event.data.reviewer_id,
       }
       setClaims((current) => current.map((claim) => (claim.claim_id === event.data.claim_id ? { ...claim, review: updatedReview } : claim)))
+    } else if (type === 'STREAM_METRICS' && event.data?.status === 'completed') {
+      setStreamStarted(false)
     } else if (type === 'stream.error' || type === 'STREAM_ERROR') {
       setStreamError(event.data?.message || 'The claim stream reported an error')
     }
@@ -131,13 +154,35 @@ export default function App() {
 
   const countByCategory = (category) => claims.filter((item) => (item.decision?.status || '').toLowerCase() !== 'error' && item.decision?.category === category).length
 
+  if (view === 'landing') return (
+    <main className="landing-shell">
+      <video ref={videoRef} className="landing-video" muted loop playsInline preload="auto" aria-hidden="true" disablePictureInPicture
+        poster="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260912_105822_bf7c2d53-9957-4521-bbbf-7c1ab7a70130.png"
+        src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260912_105953_21ad8049-9088-4a00-bad3-aee6b5575a2b.mp4" />
+      <header className="landing-header">
+        <a className="brand" href="#"><span className="brand-icon"><ShieldCheck size={24} aria-hidden="true" /></span><span>ClaimGuard</span></a>
+        <nav className="landing-nav" aria-label="Main navigation"><span>Claims intelligence</span><span className="nav-divider" /><a href="#dashboard">Dashboard <ArrowUpRight size={14} aria-hidden="true" /></a></nav>
+        <a className="stream-button landing-cta" href="#dashboard"><span>Open dashboard</span><span className="button-knob"><ArrowUpRight size={20} aria-hidden="true" /></span></a>
+      </header>
+      <section className="landing-content">
+        <div className="hero-copy"><div className="eyebrow">YOUR PRE-SUBMISSION CHECKPOINT</div><h1><span>Clearer claims.</span><span>Confident decisions.</span></h1><p><span className="tag-icon"><ShieldCheck size={20} aria-hidden="true" /></span>Understand the evidence. Keep the human decision.</p></div>
+        <aside className="hero-panel"><div className="hero-panel-top"><span>AI-assisted <i className="landing-live-dot" /></span><ShieldCheck size={35} aria-hidden="true" /></div><p>Deterministic checks.<br />Anomaly evidence.<br />Human oversight.</p><div className="category-legend"><span>Ready</span><span>Correction</span><span>Review</span></div><div className="category-track" aria-hidden="true"><i /><i /><i /></div></aside>
+      </section>
+      <footer className="landing-footer"><div className="landing-principles"><div><strong>03</strong><span>Clear recommendation<br />categories</span></div><span className="principle-divider" /><div><strong>01</strong><span>Human reviewer.<br />Final decision.</span></div></div><a className="meet-workspace" href="#dashboard"><span className="sphere-thumb" aria-hidden="true" /><span>Enter the workspace</span><span className="button-knob"><ArrowUpRight size={19} aria-hidden="true" /></span></a></footer>
+      <span className="landing-disclaimer">SYNTHETIC CLAIMS ONLY · TRIAGE PRIORITY IS NOT A FRAUD PROBABILITY</span>
+    </main>
+  )
+
   return (
     <main className="app-shell">
+      <div className="background-plate" aria-hidden="true" />
       <header className="topbar">
-        <a className="brand" href="#"><span className="brand-icon"><ShieldCheck size={19} /></span><span>ClaimGuard</span></a>
+        <a className="brand" href="#"><span className="brand-icon"><ShieldCheck size={19} /></span><span>ClaimGuard</span></a><a className="back-home" href="#">Back to home</a>
         <div className="stream-status"><span className={`status-dot status-${connection}`} /><span>{connection === 'connected' ? 'Stream connected' : connection === 'connecting' ? 'Connecting…' : 'Reconnecting…'}</span>{lastMessageAt && <span className="last-event">· event {lastMessageAt.toLocaleTimeString()}</span>}</div>
       </header>
-      <section className="page-heading"><div><div className="eyebrow"><Activity size={14} /> REAL-TIME CLAIMS</div><h1>Claims review</h1><p>Review incoming claims and record a human disposition.</p></div><button className="stream-button" onClick={startStream} disabled={streamStarting || streamStarted}>{streamStarting ? 'Starting…' : streamStarted ? 'Synthetic Stream Started' : 'Start Synthetic Stream'}</button></section>
+      <section className="page-heading">
+        <div className="hero-copy"><div className="eyebrow"><Activity size={14} /> LIVE CLAIMS WORKSPACE</div><h1>Claims review</h1><p>Inspect the evidence and record a human disposition.</p></div><button className="stream-button" onClick={startStream} disabled={streamStarting || streamStarted}><span>{streamStarting ? 'Starting…' : streamStarted ? 'Synthetic Stream Started' : 'Start Synthetic Stream'}</span><span className="button-knob"><ArrowUpRight size={20} aria-hidden="true" /></span></button>
+      </section>
       <section className="summary-row">
         <div className="summary-card"><span>Total claims</span><strong>{claims.length}</strong></div>
         <div className="summary-card"><span>Ready</span><strong>{countByCategory('READY')}</strong></div>

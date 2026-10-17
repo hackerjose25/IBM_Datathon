@@ -26,6 +26,7 @@ def db_session():
     finally:
         session.close()
         Base.metadata.drop_all(bind=engine)
+        engine.dispose()
 
 
 @pytest.fixture(scope="function")

@@ -1,0 +1,73 @@
+Collecting fastapi
+  Using cached fastapi-0.143.3-py3-none-any.whl.metadata (26 kB)
+Collecting uvicorn
+  Using cached uvicorn-0.54.0-py3-none-any.whl.metadata (6.6 kB)
+Collecting pydantic
+  Using cached pydantic-2.14.1-py3-none-any.whl.metadata (133 kB)
+Collecting sqlalchemy
+  Using cached sqlalchemy-2.1.5-py3-none-any.whl.metadata (9.7 kB)
+Collecting websockets
+  Downloading websockets-17.2-cp312-cp312-manylinux2014_s390x.manylinux_2_17_s390x.manylinux_2_28_s390x.whl.metadata (6.3 kB)
+Requirement already satisfied: pytest in /usr/lib/python3/dist-packages (7.4.4)
+Collecting httpx
+  Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+Requirement already satisfied: python-dateutil in /usr/lib/python3/dist-packages (2.8.2)
+Collecting python-dotenv
+  Downloading python_dotenv-1.2.4-py3-none-any.whl.metadata (29 kB)
+Collecting starlette>=0.46.0 (from fastapi)
+  Downloading starlette-1.8.0-py3-none-any.whl.metadata (6.6 kB)
+Collecting typing-extensions>=4.8.0 (from fastapi)
+  Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting typing-inspection>=0.4.2 (from fastapi)
+  Downloading typing_inspection-0.4.4-py3-none-any.whl.metadata (2.6 kB)
+Collecting annotated-doc>=0.0.2 (from fastapi)
+  Downloading annotated_doc-0.0.5-py3-none-any.whl.metadata (6.5 kB)
+Collecting opentelemetry-api>=1.44.0 (from fastapi)
+  Downloading opentelemetry_api-1.45.1-py3-none-any.whl.metadata (1.4 kB)
+Requirement already satisfied: click>=7.0 in /usr/lib/python3/dist-packages (from uvicorn) (8.1.6)
+Collecting h11>=0.8 (from uvicorn)
+  Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+Collecting annotated-types>=0.6.0 (from pydantic)
+  Downloading annotated_types-0.8.0-py3-none-any.whl.metadata (15 kB)
+Collecting pydantic-core==2.50.1 (from pydantic)
+  Downloading pydantic_core-2.50.1-cp312-cp312-manylinux_2_17_s390x.manylinux2014_s390x.whl.metadata (6.5 kB)
+Requirement already satisfied: iniconfig in /usr/lib/python3/dist-packages (from pytest) (1.1.1)
+Requirement already satisfied: packaging in /usr/lib/python3/dist-packages (from pytest) (24.0)
+Requirement already satisfied: pluggy<2.0,>=0.12 in /usr/lib/python3/dist-packages (from pytest) (1.4.0)
+Collecting anyio (from httpx)
+  Downloading anyio-4.15.1-py3-none-any.whl.metadata (4.7 kB)
+Requirement already satisfied: certifi in /usr/lib/python3/dist-packages (from httpx) (2023.11.17)
+Collecting httpcore==1.* (from httpx)
+  Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+Requirement already satisfied: idna in /usr/lib/python3/dist-packages (from httpx) (3.6)
+Downloading fastapi-0.143.3-py3-none-any.whl (144 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 144.8/144.8 kB 10.1 MB/s eta 0:00:00
+Downloading uvicorn-0.54.0-py3-none-any.whl (87 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 87.4/87.4 kB 23.2 MB/s eta 0:00:00
+Downloading pydantic-2.14.1-py3-none-any.whl (488 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 488.1/488.1 kB 20.3 MB/s eta 0:00:00
+Downloading pydantic_core-2.50.1-cp312-cp312-manylinux_2_17_s390x.manylinux2014_s390x.whl (2.4 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.4/2.4 MB 57.6 MB/s eta 0:00:00
+Downloading sqlalchemy-2.1.5-py3-none-any.whl (2.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 57.4 MB/s eta 0:00:00
+Downloading websockets-17.2-cp312-cp312-manylinux2014_s390x.manylinux_2_17_s390x.manylinux_2_28_s390x.whl (225 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 225.9/225.9 kB 39.9 MB/s eta 0:00:00
+Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 73.5/73.5 kB 22.9 MB/s eta 0:00:00
+Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 78.8/78.8 kB 22.7 MB/s eta 0:00:00
+Downloading python_dotenv-1.2.4-py3-none-any.whl (23 kB)
+Downloading annotated_doc-0.0.5-py3-none-any.whl (5.3 kB)
+Downloading annotated_types-0.8.0-py3-none-any.whl (13 kB)
+Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+Downloading opentelemetry_api-1.45.1-py3-none-any.whl (60 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 60.3/60.3 kB 15.1 MB/s eta 0:00:00
+Downloading starlette-1.8.0-py3-none-any.whl (79 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 79.6/79.6 kB 12.5 MB/s eta 0:00:00
+Downloading anyio-4.15.1-py3-none-any.whl (132 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 132.1/132.1 kB 15.1 MB/s eta 0:00:00
+Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 45.6/45.6 kB 14.7 MB/s eta 0:00:00
+Downloading typing_inspection-0.4.4-py3-none-any.whl (14 kB)
+Installing collected packages: websockets, typing-extensions, python-dotenv, h11, annotated-types, annotated-doc, uvicorn, typing-inspection, sqlalchemy, pydantic-core, opentelemetry-api, httpcore, anyio, starlette, pydantic, httpx, fastapi
+Successfully installed annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.15.1 fastapi-0.143.3 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 opentelemetry-api-1.45.1 pydantic-2.14.1 pydantic-core-2.50.1 python-dotenv-1.2.4 sqlalchemy-2.1.5 starlette-1.8.0 typing-extensions-4.16.0 typing-inspection-0.4.4 uvicorn-0.54.0 websockets-17.2

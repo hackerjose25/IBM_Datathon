@@ -1,0 +1,52 @@
+{
+  "timestamp_utc": "2026-10-17T19:00:54.602641+00:00",
+  "environment": {
+    "status": "HEALTHY",
+    "service": "ClaimGuard",
+    "version": "0.1.0",
+    "execution_target": "IBM_LINUXONE",
+    "database": "/home/linux1/claimguard/claimguard.db",
+    "model_version": "1.0.0",
+    "model_loaded_from_disk": true,
+    "machine_architecture": "s390x",
+    "latency_p50_ms": 2.343,
+    "latency_p95_ms": 2.77,
+    "latency_metrics": {
+      "count": 200,
+      "mean_ms": 2.396,
+      "p50_ms": 2.343,
+      "p95_ms": 2.77,
+      "p99_ms": 3.419,
+      "min_ms": 2.12,
+      "max_ms": 3.843,
+      "execution_target": "IBM_LINUXONE"
+    }
+  },
+  "client_platform": "Linux-6.8.0-147-generic-s390x-with-glibc2.39",
+  "workload": "Serial HTTP to the measured server: 100 claims, amounts 350..449, one provider/procedure, unique patients; no warmup; concurrency 1. Separate generator stream: 100 synthetic claims, random seed 42, 0.1s pacing; timestamps and run IDs vary.",
+  "inference": {
+    "count": 100,
+    "mean_ms": 2.679,
+    "median_ms": 2.189,
+    "p95_ms": 2.582
+  },
+  "end_to_end_http": {
+    "count": 100,
+    "mean_ms": 11.953,
+    "median_ms": 10.897,
+    "p95_ms": 17.374
+  },
+  "http_throughput_claims_per_second": 83.458,
+  "stream": {
+    "received": 100,
+    "seconds": 11.916,
+    "claims_per_second": 8.392,
+    "categories": {
+      "REVIEW": 94,
+      "CORRECTION": 6
+    }
+  },
+  "reviewed_claim_id": "CLM-FCAF32D0-1115",
+  "review_persisted": true,
+  "limitations": "Measured on Linux s390x. End-to-end includes HTTP, validation, inference, persistence and broadcast; inference timing includes preprocessing and evidence generation. Deployment attribution also requires provisioning and SSH/architecture evidence. No real-world quality or fraud accuracy claim."
+}

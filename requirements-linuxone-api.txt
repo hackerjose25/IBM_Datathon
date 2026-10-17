@@ -1,0 +1,11 @@
+# API layer for the verified Ubuntu 24.04 s390x deployment.
+# Scientific packages come from Ubuntu apt, not the Windows dependency pins.
+fastapi==0.143.3
+uvicorn==0.54.0
+pydantic==2.14.1
+sqlalchemy==2.1.5
+websockets==17.2
+pytest>=8.0.0
+httpx==0.28.1
+python-dateutil>=2.9.0
+python-dotenv==1.2.4

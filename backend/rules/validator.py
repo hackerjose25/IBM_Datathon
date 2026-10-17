@@ -1,5 +1,5 @@
 """Deterministic rule validation engine for incoming claims."""
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 from typing import List, Tuple, Optional
 from sqlalchemy.orm import Session
 from backend.schemas import ClaimInput, ValidationFinding
@@ -112,11 +112,24 @@ class ClaimValidator:
                 ))
                 has_error = True
 
+        submitted = None
+        try:
+            submitted = datetime.fromisoformat(claim.submission_timestamp.replace("Z", "+00:00"))
+            if submitted.tzinfo is None:
+                raise ValueError("timezone required")
+            submitted = submitted.astimezone(timezone.utc)
+            if parsed_service_date and parsed_service_date > submitted.date():
+                raise ValueError("service date is after submission")
+        except ValueError:
+            findings.append(ValidationFinding(rule_id="VAL_SUBMISSION_DATE", field="submission_timestamp",
+                message="Submission must have a valid timezone-aware timestamp on or after the service date",
+                severity="ERROR", passed=False))
+            has_error = True
+
         # 5. Duplicate Submission Detection
         # Duplicate key: (patient_id, provider_id, procedure_code, service_date) within window
         if db is not None and not has_error and claim.procedure_code:
-            cutoff = datetime.now() - timedelta(days=settings.DUPLICATE_WINDOW_DAYS)
-            cutoff_iso = cutoff.isoformat()
+            cutoff = submitted - timedelta(days=settings.DUPLICATE_WINDOW_DAYS)
 
             existing = db.query(ClaimModel).filter(
                 ClaimModel.claim_id != claim.claim_id,
@@ -124,8 +137,16 @@ class ClaimValidator:
                 ClaimModel.provider_id == claim.provider_id,
                 ClaimModel.procedure_code == claim.procedure_code,
                 ClaimModel.service_date == claim.service_date,
-                ClaimModel.submission_timestamp >= cutoff_iso
-            ).first()
+            ).all()
+            matches = []
+            for prior in existing:
+                try:
+                    prior_time = datetime.fromisoformat(prior.submission_timestamp.replace("Z", "+00:00"))
+                    if prior_time.tzinfo and cutoff <= prior_time.astimezone(timezone.utc) <= submitted:
+                        matches.append(prior)
+                except ValueError:
+                    continue
+            existing = matches[0] if matches else None
 
             if existing:
                 is_duplicate = True

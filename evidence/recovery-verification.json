@@ -1,0 +1,15 @@
+{
+  "restored_disposition": "REVIEW",
+  "https_health": "HEALTHY",
+  "model_loaded_from_disk": true,
+  "enabled_services": [
+    "claimguard",
+    "claimguard-web-ports",
+    "nginx",
+    "certbot.timer"
+  ],
+  "actual_vm_reboot_tested": false,
+  "process_failure_test": "MainPID changed from 6337 to 6431; NRestarts=1; service active/running",
+  "restored_claim_id": "CLM-40254990-1215",
+  "architecture": "s390x"
+}

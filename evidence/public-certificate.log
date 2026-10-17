@@ -1,0 +1,20 @@
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Account registered.
+Requesting a certificate for claimguard-148-100-98-100.sslip.io
+
+Successfully received certificate.
+Certificate is saved at: /etc/letsencrypt/live/claimguard-148-100-98-100.sslip.io/fullchain.pem
+Key is saved at:         /etc/letsencrypt/live/claimguard-148-100-98-100.sslip.io/privkey.pem
+This certificate expires on 2027-01-15.
+These files will be updated when the certificate renews.
+Certbot has set up a scheduled task to automatically renew this certificate in the background.
+
+Deploying certificate
+Successfully deployed certificate for claimguard-148-100-98-100.sslip.io to /etc/nginx/sites-enabled/claimguard
+Congratulations! You have successfully enabled HTTPS on https://claimguard-148-100-98-100.sslip.io
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+If you like Certbot, please consider supporting our work by:
+ * Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+ * Donating to EFF:                    https://eff.org/donate-le
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

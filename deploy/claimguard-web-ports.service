@@ -1,0 +1,12 @@
+[Unit]
+Description=Allow approved ClaimGuard HTTP and HTTPS ports
+After=network-pre.target netfilter-persistent.service
+Before=nginx.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c '/usr/sbin/iptables -C INPUT -p tcp -m multiport --dports 80,443 -m conntrack --ctstate NEW -j ACCEPT || /usr/sbin/iptables -I INPUT 2 -p tcp -m multiport --dports 80,443 -m conntrack --ctstate NEW -j ACCEPT'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

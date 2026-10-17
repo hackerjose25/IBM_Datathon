@@ -1,0 +1,11 @@
+Collecting fastapi>=0.110.0 (from -r requirements.txt (line 5))
+  Downloading fastapi-0.143.3-py3-none-any.whl.metadata (26 kB)
+Collecting uvicorn>=0.29.0 (from uvicorn[standard]>=0.29.0->-r requirements.txt (line 6))
+  Downloading uvicorn-0.54.0-py3-none-any.whl.metadata (6.6 kB)
+Collecting pydantic>=2.6.0 (from -r requirements.txt (line 7))
+  Downloading pydantic-2.14.1-py3-none-any.whl.metadata (133 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 133.0/133.0 kB 3.2 MB/s eta 0:00:00
+Collecting sqlalchemy>=2.0.0 (from -r requirements.txt (line 8))
+  Downloading sqlalchemy-2.1.5-py3-none-any.whl.metadata (9.7 kB)
+ERROR: Could not find a version that satisfies the requirement scikit-learn==1.8.0 (from versions: none)
+ERROR: No matching distribution found for scikit-learn==1.8.0

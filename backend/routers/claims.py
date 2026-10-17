@@ -13,11 +13,21 @@ from backend.schemas import (
     AnomalyEvidence,
     ReviewerActionRequest,
     ReviewerActionResponse,
+    ReviewerDecision,
 )
 from backend.models import ClaimModel, ValidationFindingModel, AuditEventModel
 from backend.services.claim_service import ClaimService
 
 router = APIRouter(prefix="/claims", tags=["Claims"])
+
+
+def latest_decision(claim):
+    resolved = [a for a in claim.audit_events if a.action == "RESOLVE"]
+    if not resolved:
+        return None
+    event = max(resolved, key=lambda a: (a.timestamp, a.id))
+    return ReviewerDecision(decision=event.disposition, notes=event.notes,
+                            reviewer_id=event.reviewer_id, timestamp=event.timestamp)
 
 @router.post("", response_model=ClaimRecord, status_code=201)
 async def ingest_claim(claim: ClaimInput, db: Session = Depends(get_db)):
@@ -80,6 +90,7 @@ def list_claims(
             latency_p50_ms=anomaly_evidence.latency_p50_ms,
             latency_p95_ms=anomaly_evidence.latency_p95_ms,
             review_state=c.review_state,
+            reviewer_decision=latest_decision(c),
             created_at=c.created_at,
         ))
     return results
@@ -140,6 +151,7 @@ def get_claim(claim_id: str, db: Session = Depends(get_db)):
             latency_p50_ms=anomaly_evidence.latency_p50_ms,
             latency_p95_ms=anomaly_evidence.latency_p95_ms,
             review_state=c.review_state,
+            reviewer_decision=latest_decision(c),
             created_at=c.created_at,
         ),
         "audit_events": audit_events

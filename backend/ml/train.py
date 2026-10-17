@@ -6,6 +6,7 @@ from typing import Optional, Union
 import joblib
 import numpy as np
 from sklearn.ensemble import IsolationForest
+from backend.ml.contract import FEATURE_NAMES, PREPROCESSING, runtime_versions
 
 def train_and_save_model(output_path: Optional[Union[str, Path]] = None) -> Path:
     """Trains a baseline Isolation Forest model on synthetic claim features and saves to disk."""
@@ -42,8 +43,10 @@ def train_and_save_model(output_path: Optional[Union[str, Path]] = None) -> Path
         "model": model,
         "version": "1.0.0",
         "algorithm": "IsolationForest",
-        "target_platform": "IBM LinuxONE (s390x) & x86_64 compatible",
-        "feature_names": ["log_amount", "service_lines_count", "provider_hash", "procedure_hash"],
+        "runtime_versions": runtime_versions(),
+        "preprocessing": PREPROCESSING,
+        "feature_names": FEATURE_NAMES,
+        "training_data": "synthetic feature generator; seed=42; n=1000; lognormal(6.5,0.8), Poisson(1.5)+1, uniform categorical buckets; no real patient data",
         "parameters": {
             "n_estimators": 100,
             "contamination": 0.08,

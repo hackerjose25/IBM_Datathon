@@ -1,0 +1,53 @@
+{
+  "timestamp_utc": "2026-10-17T18:34:02.126348+00:00",
+  "environment": {
+    "status": "HEALTHY",
+    "service": "ClaimGuard",
+    "version": "0.1.0",
+    "execution_target": "LOCAL_MOCK",
+    "database": "C:\\Users\\joser\\Desktop\\IBM\\claimguard.db",
+    "model_version": "1.0.0",
+    "model_loaded_from_disk": true,
+    "machine_architecture": "AMD64",
+    "latency_p50_ms": 0.0,
+    "latency_p95_ms": 0.0,
+    "latency_metrics": {
+      "count": 0,
+      "mean_ms": 0.0,
+      "p50_ms": 0.0,
+      "p95_ms": 0.0,
+      "p99_ms": 0.0,
+      "min_ms": 0.0,
+      "max_ms": 0.0,
+      "execution_target": "LOCAL_MOCK"
+    }
+  },
+  "client_platform": "Windows-11-10.0.26300-SP0",
+  "workload": "Local serial HTTP: 100 claims, amounts 350..449, one provider/procedure, unique patients; no warmup; concurrency 1. Separate generator stream: 100 synthetic claims, random seed 42, 0.1s pacing; timestamps and run IDs vary.",
+  "inference": {
+    "count": 100,
+    "mean_ms": 46.647,
+    "median_ms": 37.716,
+    "p95_ms": 102.194
+  },
+  "end_to_end_http": {
+    "count": 100,
+    "mean_ms": 83.818,
+    "median_ms": 65.346,
+    "p95_ms": 165.249
+  },
+  "http_throughput_claims_per_second": 11.909,
+  "stream": {
+    "received": 100,
+    "seconds": 41.792,
+    "claims_per_second": 2.393,
+    "categories": {
+      "REVIEW": 12,
+      "READY": 82,
+      "CORRECTION": 6
+    }
+  },
+  "reviewed_claim_id": "CLM-A50F3626-1015",
+  "review_persisted": true,
+  "limitations": "Local Windows AMD64 only; not LinuxONE. End-to-end includes HTTP, validation, inference, persistence and broadcast; inference timing includes preprocessing and evidence generation. No real-world quality or fraud accuracy claim."
+}

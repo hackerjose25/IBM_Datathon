@@ -1,8 +1,63 @@
 """Unit tests for ML anomaly detector, artifact loading, and latency tracking."""
 import tempfile
+import warnings
+import joblib
+import numpy as np
+from sklearn.exceptions import InconsistentVersionWarning
 from pathlib import Path
 from backend.schemas import ClaimInput
 from backend.ml.inference import detector, ClaimAnomalyDetector
+from backend.ml.train import train_and_save_model
+from backend.ml.contract import runtime_versions, FEATURE_NAMES, PREPROCESSING
+
+
+def test_training_and_reloaded_inference_are_repeatable(tmp_path):
+    paths = [train_and_save_model(tmp_path / f"model-{i}.joblib") for i in range(2)]
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", InconsistentVersionWarning)
+        engines = [ClaimAnomalyDetector(path) for path in paths]
+    claim = ClaimInput(claim_id="REPEAT-1", patient_id="SYN-1", provider_id="PRV-20",
+                       procedure_code="99213", diagnosis_code="E11.9", service_date="2026-10-15",
+                       submission_timestamp="2026-10-17T10:00:00Z", claim_amount=450, service_lines_count=1)
+    results = [engine.predict(claim) for engine in engines for _ in range(3)]
+    assert all(engine.model_loaded_from_disk for engine in engines)
+    assert all(result.model_score == results[0].model_score for result in results)
+    assert all(result.normalized_score == results[0].normalized_score for result in results)
+    assert not any("failure" in factor.lower() for result in results for factor in result.factors)
+    artifact = joblib.load(paths[0])
+    assert artifact["runtime_versions"] == runtime_versions()
+    assert artifact["feature_names"] == FEATURE_NAMES
+    assert artifact["preprocessing"] == PREPROCESSING
+    np.testing.assert_array_equal(engines[0].extract_features(claim), engines[1].extract_features(claim))
+
+
+def test_incompatible_artifact_is_rejected(tmp_path):
+    path = train_and_save_model(tmp_path / "incompatible.joblib")
+    artifact = joblib.load(path)
+    artifact["runtime_versions"]["scikit_learn"] = "unsupported-version"
+    joblib.dump(artifact, path)
+    engine = ClaimAnomalyDetector(path)
+    assert engine.model is None
+    assert not engine.model_loaded_from_disk
+    assert engine.model_version == "unavailable"
+
+
+def test_scenario_label_does_not_influence_inference():
+    claim = ClaimInput(claim_id="LABEL-1", patient_id="SYN-1", provider_id="PRV-001",
+                       procedure_code="99213", diagnosis_code="E11.9", service_date="2026-10-15",
+                       submission_timestamp="2026-10-17T10:00:00Z", claim_amount=350)
+    normal = detector.predict(claim)
+    labelled = detector.predict(claim.model_copy(update={"injected_scenario": "high_amount"}))
+    assert normal.model_score == labelled.model_score
+    assert normal.is_anomaly == labelled.is_anomaly
+
+
+def test_linuxone_missing_artifact_does_not_silently_fit(monkeypatch, tmp_path):
+    from backend.config import settings
+    monkeypatch.setattr(settings, "EXECUTION_TARGET", "IBM_LINUXONE")
+    engine = ClaimAnomalyDetector(tmp_path / "missing.joblib")
+    assert engine.model is None
+    assert not engine.model_loaded_from_disk
 
 def test_feature_extraction():
     claim = ClaimInput(

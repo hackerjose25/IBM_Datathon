@@ -4,11 +4,14 @@ import logging
 from pathlib import Path
 import time
 import zlib
+import warnings
 from typing import Dict, Any, List, Optional, Union
 
 import joblib
 import numpy as np
 from sklearn.ensemble import IsolationForest
+from sklearn.exceptions import InconsistentVersionWarning
+from backend.ml.contract import FEATURE_NAMES, PREPROCESSING, runtime_versions
 
 from backend.config import settings
 from backend.schemas import ClaimInput, AnomalyEvidence
@@ -82,7 +85,15 @@ class ClaimAnomalyDetector:
 
         if path.is_file():
             try:
-                artifact = joblib.load(path)
+                with warnings.catch_warnings():
+                    warnings.simplefilter("error", InconsistentVersionWarning)
+                    artifact = joblib.load(path)
+                if not isinstance(artifact, dict):
+                    raise ValueError("Unversioned artifact; retrain with python -m backend.ml.train")
+                if artifact.get("runtime_versions", {}).get("scikit_learn") != runtime_versions()["scikit_learn"]:
+                    raise ValueError("Training/runtime scikit-learn mismatch; retrain the artifact")
+                if artifact.get("feature_names") != FEATURE_NAMES or artifact.get("preprocessing") != PREPROCESSING:
+                    raise ValueError("Incompatible feature/preprocessing contract; retrain the artifact")
                 if isinstance(artifact, dict) and "model" in artifact:
                     self.model = artifact["model"]
                     self.model_version = str(artifact.get("version", "1.0.0"))
@@ -97,12 +108,18 @@ class ClaimAnomalyDetector:
                 )
                 return True
             except Exception as e:
-                logger.warning(
-                    f"Failed to load model artifact from {path}: {e}. "
-                    "Falling back gracefully to in-memory baseline fit."
-                )
+                self.model = None
+                self.model_loaded_from_disk = False
+                self.model_version = "unavailable"
+                logger.error("Rejected model artifact %s: %s", path, e)
+                return False
 
-        # Fallback to fitting baseline in memory
+        if self.target == "IBM_LINUXONE":
+            logger.error("LinuxONE profile requires a trained disk artifact; inference unavailable")
+            self.model = None
+            self.model_version = "unavailable"
+            return False
+        # Local development fallback only, reported as an in-memory baseline.
         logger.info(
             f"Pre-trained model artifact not found at {path}. "
             "Initializing in-memory baseline Isolation Forest."
@@ -143,8 +160,9 @@ class ClaimAnomalyDetector:
             "model": self.model,
             "version": version,
             "algorithm": "IsolationForest",
-            "target_platform": "IBM LinuxONE (s390x) & x86_64 compatible",
-            "feature_names": ["log_amount", "service_lines_count", "provider_hash", "procedure_hash"],
+            "runtime_versions": runtime_versions(),
+            "preprocessing": PREPROCESSING,
+            "feature_names": FEATURE_NAMES,
         }
         joblib.dump(artifact, target_path, compress=3)
         self.model_path = str(target_path)
@@ -179,18 +197,18 @@ class ClaimAnomalyDetector:
             # Map raw score (-0.35 to +0.25 typically) into 0-100 anomaly intensity
             # More negative raw_score -> higher anomaly intensity
             normalized = float(np.clip((0.2 - raw_score) / 0.5 * 100.0, 0.0, 100.0))
-            is_anomaly = (pred_label == -1) or (claim.injected_scenario == "high_amount") or (claim.claim_amount > 15000.0)
+            is_anomaly = pred_label == -1
 
             # Build explainable factors
             factors: List[str] = []
             if claim.claim_amount > 10000.0:
-                factors.append(f"High billed amount (${claim.claim_amount:,.2f}) deviates from standard distribution")
+                factors.append(f"High billed amount (${claim.claim_amount:,.2f}) exceeds the descriptive $10,000 threshold; not a model attribution")
             if claim.service_lines_count > 5:
                 factors.append(f"Elevated service line count ({claim.service_lines_count})")
             if is_anomaly and not factors:
                 factors.append(f"Isolation Forest identified atypical feature pattern (score: {normalized:.1f}/100)")
             elif not is_anomaly:
-                factors.append("Features align with historical claim distribution")
+                factors.append("Features align with the synthetic training distribution")
 
             elapsed_ms = round((time.perf_counter() - start_time) * 1000.0, 3)
             self.latency_tracker.record(elapsed_ms)
@@ -211,6 +229,7 @@ class ClaimAnomalyDetector:
             self.latency_tracker.record(elapsed_ms)
             metrics = self.latency_tracker.get_metrics()
             return AnomalyEvidence(
+                inference_error=str(e),
                 is_anomaly=True,
                 model_score=-1.0,
                 normalized_score=100.0,

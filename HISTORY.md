@@ -1,5 +1,88 @@
 # ClaimGuard History
 
+## 2026-10-18 — Main branch handoff
+
+- User requested the complete current build on main in hackerjose25/IBM_Datathon. Fetched origin and confirmed the integrated history includes the existing remote main without requiring a force update.
+- Prepared application, frontend release source, tests, deployment templates, operational documentation and synthetic verification evidence for the handoff. Private key, environment files, local Vercel account state, dependencies, build output and local databases are excluded by ignore rules. No private key or active .env file appears in tracked history.
+- Final verification before commit: 34 backend tests passed; production frontend build passed with the existing local Node version warning; git diff --check passed. Live deployment and reboot-recovery evidence remain documented separately.
+
+
+## 2026-10-18 — Approved automatic startup and verified process recovery
+
+- After explicit user approval, installed/enabled the API and web-port systemd units. Ordered the narrow TCP 80/443 restoration after the existing netfilter-persistent service and before nginx; preserved the rest of the firewall. API runs as linux1 with loopback binding, IBM_LINUXONE profile and on-failure restart. Nginx and certbot timer were already enabled.
+- Validated unit syntax, enabled state and active state. Replaced the manually started API only after confirming no stream was running.
+- Tested one controlled API process failure: MainPID 6337 became 6431, NRestarts incremented to 1, and the service returned to active/running. Public HTTPS was healthy, the model loaded from disk, the saved synthetic REVIEW disposition persisted, and the browser reconnected. Saved evidence/recovery-verification.json.
+- No whole-VM reboot was performed. Startup configuration is enabled but full reboot recovery is not empirically tested. Interrupted in-memory streams are not resumed automatically. Updated deployment, public-hosting and submission documentation accordingly.
+
+
+## 2026-10-18 — Public Vercel-to-LinuxONE workflow verified
+
+- User explicitly approved public HTTPS API access. Installed nginx/certbot, enabled the scoped proxy, diagnosed the VM's SSH-only firewall and added only a TCP 80/443 allow rule. Obtained a valid certificate and HTTPS redirect. FastAPI remains bound to VM loopback.
+- Verified Vercel connects directly over HTTPS/WSS with the intended origin. The public UI started a 100-claim stream; all 100 events were received and processed. A labelled synthetic verification disposition persisted and was visible after a browser reload. Stopped the local SSH tunnel and confirmed the public dashboard remained connected.
+- Verified boundary checks: direct public claim POST 403, API docs 404, unrelated browser origin 403, preflight 204. Saved integration report, screenshot, certificate issuance log and actual proxy configuration under evidence/public-*.
+- Operational limitation: automatic approval review separately rejected making firewall/API startup persistent across reboots, treating that as additional system scope. Local unit templates were prepared but were not uploaded or enabled. Current public service works; reboot recovery is unverified and still requires manual restoration until separately approved.
+- Public access remains a shared synthetic demo, not authenticated reviewer identity or a production claims system. Origin/rate limits do not establish user authorization. No new model quality/performance claims were made.
+
+
+## 2026-10-18 — Frontend published to Vercel
+
+- At the user's request, switched frontend hosting from the unpublished Sites registration to Vercel. Used the authenticated account and sanitized public-site/ directory; upload exclusions cover keys, environment files, Sites metadata and dependencies. The source snapshot contains no backend/database files.
+- Vercel production deployment dpl_8npdFpmheE34eiLAj1eA19X5v1pv reported READY at https://claimguard-dun.vercel.app. Verified anonymous HTTP 200 and the rendered landing screen in the browser; saved evidence/vercel-landing.png.
+- Disconnected Vercel's automatically inferred root Git repository link so unrelated pushes do not automatically replace the sanitized deployment. Future releases can be deployed explicitly from public-site/.
+- Configured the hosted build for proposed HTTPS/WSS LinuxONE endpoints and updated the prepared proxy's allowed origin to the actual Vercel URL. The proxy is not installed and those endpoints are not verified.
+- Remaining blocker: public live-claims connectivity requires the separately pending network-exposure approval. Automatic approval review rejected installing/starting the public API reverse proxy; no workaround was attempted. The published landing page does not establish a working public claims dashboard yet.
+
+
+## 2026-10-18 — Public hosting prepared, exposure approval pending
+
+- Registered a single unpublished Sites project; persisted its identity in public-site/.openai/hosting.json without storing its source credential. Prepared a sanitized frontend snapshot and a production HTTPS/WSS build. Build passed with the existing Node-version warning.
+- Prepared deploy/public-api.nginx.conf with bounded routes, request sizes/rates, fixed stream size/pacing, WebSocket connection limits and browser-origin restrictions. No public proxy was installed or started.
+- Automatic approval review rejected installing/starting nginx/certbot because the persistent external API access surface and authentication/firewall scope needed specific approval. Prepared docs/PUBLIC-HOSTING.md describing the exact public shared-synthetic-demo scope and pending checks. Awaiting user approval before exposing ports or publishing a nonworking app.
+
+
+## 2026-10-18 — Verified IBM LinuxONE deployment and dashboard connection
+
+- Verified SSH to the user-provisioned event VM, s390x architecture, Ubuntu 24.04 and Python 3.12.3. Added *.pem to Git ignore rules; uploaded only explicitly selected backend/test/script files, excluding keys, local database, environment files and Windows model.
+- The pinned scikit-learn 1.8.0 had no binary s390x wheel. Installed Ubuntu-native scientific packages and API wheels in a system-site-packages virtual environment; trained a separate target artifact. Verified scikit-learn 1.4.1.post1, NumPy 1.26.4, SciPy 1.11.4 and Joblib 1.3.2. All 34 tests passed on the VM, with one test-client deprecation warning.
+- Started the API bound to VM loopback with IBM_LINUXONE profile. Ran actual 100-request HTTP measurements plus a separate 100-claim WebSocket stream; all events arrived and a labelled synthetic verification review persisted. Final recorded target scoring mean/median/p95: 2.679/2.189/2.582 ms; target loopback HTTP: 11.953/10.897/17.374 ms. Observed serial throughput 83.458 claims/s; paced stream 8.392 claims/s.
+- The final stream reused profiles from the earlier seed-42 run in the same database; duplicate findings produced 94 REVIEW and 6 CORRECTION recommendations. These counts are not accuracy labels. Timings exclude internet/tunnel latency; target and Windows scientific package versions differ.
+- Stopped the local API and opened an SSH tunnel on local port 8000 to the remote API. Reloaded the dashboard and inspected a target-scored claim showing IBM_LINUXONE evidence and saved REVIEW disposition. Captured screenshot and remote reports, architecture, package versions, model checksum, test output, installation and service logs under evidence/linuxone/.
+- Updated platform-aware report labels, README, deployment/submission guides and the target API dependency profile. Earlier pending-access statements are historical and superseded by this evidence.
+- Remaining: final human-led demo recording and official submission, representative held-out quality evaluation and fairness/calibration limitations. Service uses nohup without reboot auto-start; dashboard needs its frontend and SSH tunnel running. No production insurer integration or real-world fraud-performance claim.
+
+
+## 2026-10-18 — Model compatibility and local hackathon verification
+
+- Completed locally: Rebuilt the Isolation Forest artifact using scikit-learn 1.8.0, recorded training/runtime and preprocessing metadata, pinned tested ML dependencies, and rejected incompatible artifacts. LinuxONE mode no longer silently trains a missing model. Removed scenario-label influence from inference.
+- Fixed: Scoring failures now persist ERROR; recommendations remain distinct from human dispositions; list/detail endpoints restore the latest saved decision from audit records. Replayed claim IDs cannot overwrite existing reviews. Duplicate checks exclude later events and honor the configured submission-time window. Submission chronology and non-finite amounts are validated. Validation alert text now identifies the actual failed rule.
+- Streaming: Added reproducible seed 42 and unique run IDs; guarded repeated starts, restored the stream button on completion, and loaded up to 500 dashboard records so a 100-claim demo remains visible after reload.
+- Verification: 34 backend tests passed; production frontend build passed with the existing Node 20.18.0 compatibility warning. Verified saved REVIEW disposition in the browser after reload. The automated live run processed 100 serial HTTP claims and separately received all 100 generated WebSocket claim events, then persisted a clearly labelled synthetic verification disposition and checked it using a fresh API client.
+- Local results: Serial scoring-path mean/median/p95 46.647/37.716/102.194 ms; end-to-end HTTP 83.818/65.346/165.249 ms; serial throughput 11.909 claims/s. Separate paced stream delivered 100 events in 41.792 s (2.393 claims/s). These are Windows AMD64 measurements, not LinuxONE or model-quality benchmarks. Conditions are in evidence/local-verification.json.
+- Prepared: docs/LINUXONE.md with official event access guidance and an unexecuted deployment procedure; docs/SUBMISSION.md with architecture, measured local results, two-minute demo script, and remaining limitations. Corrected README status and setup instructions. Earlier entries are historical claims, not current proof of s390x compatibility.
+- Pending: User needs event-provided LinuxONE access. No remote deployment, s390x dependency compatibility, IBM inference logs, remote performance, final judging recording, calibrated quality metrics, or completed hackathon submission is claimed. Local progress does not satisfy the full MVP gate.
+
+
+## 2026-10-17 — Animated landing screen and separate claims workspace
+
+- Changed: Matched the supplied recording with a looping sphere video, glass navigation and information panel, light typography, and staggered entrance motion. Added working home/dashboard hash navigation. Moved Start Synthetic Stream into the claims workspace only, retaining existing ingestion, selection, and reviewer handlers and in-memory state. Reduced-motion settings pause video and suppress entrance animation.
+- Verified: Browser showed video playback (paused false, readyState 4, advancing playback time), landing navigation into the connected dashboard with existing claims and reviewer controls, and return-home navigation. Captured the resulting landing layout. Production build passed; installed Node version warning remains.
+- Limitations: No new scoring, review mutation, LinuxONE deployment, or model compatibility validation was performed for this UI change. Remote video availability depends on its host; a poster is provided as fallback.
+
+
+## 2026-10-17 — Local backend startup and dashboard connection
+
+- Changed: Allowed the localhost and loopback frontend origins on port 5174 alongside existing development origins, matching the running dashboard.
+- Verified: Started FastAPI on 127.0.0.1:8000. GET /health returned HEALTHY with LOCAL_MOCK execution and a disk-loaded model. GET /api/claims returned HTTP 200 and the expected allowed origin for port 5174. Reloaded the dashboard and observed Stream connected.
+- Limitations: Startup reported a scikit-learn model/runtime version mismatch (artifact 1.9.1, installed 1.8.0). Scoring compatibility was not verified in this startup check. No LinuxONE execution is claimed.
+
+
+## 2026-10-17 — Landing-page theme applied to existing dashboard
+
+- Changed: Adapted the supplied pale-blue glass landing-page theme to the existing React dashboard with a sphere poster, oversized headline, rounded stream control, translucent panels, and responsive layouts. Added Inter font loading and matching browser theme color. Documented external visual resources in README.md.
+- Preserved: Existing API requests, WebSocket handling, claim selection, live counts, validation/anomaly separation, error states, and reviewer disposition handlers. Added no product actions or sample metrics. Kept scrolling so review controls remain accessible on smaller screens; used the static poster instead of autoplay video.
+- Verification: `npm run build` passed (1,582 modules transformed). `git diff --check` passed. Vite warned that installed Node 20.18.0 is below its supported minimum (20.19+ or 22.12+), although this production build succeeded.
+- Remaining limitations: Follow-up browser inspection verified the redesigned hero, totals, claims table, and empty inspector render at http://127.0.0.1:5174/ after starting the frontend server. Live backend interaction remains unverified; the browser showed Reconnecting with the backend unavailable. External font/image availability depends on their hosts. No new LinuxONE execution evidence is claimed.
+
 ## 2026-10-17 18:10 +05:30 — Pre-trained ML artifact loading, LinuxONE compatibility & latency percentiles
 
 - Changed:

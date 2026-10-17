@@ -39,6 +39,7 @@ ENV/
 
 # Testing & Cache
 .pytest_cache/
+.test-temp/
 .coverage
 htmlcov/
 
@@ -46,4 +47,5 @@ htmlcov/
 .vscode/
 .idea/
 .DS_Store
+*.pem
 Thumbs.db

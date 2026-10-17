@@ -38,6 +38,8 @@ class ClaimService:
         4. DB persistence
         5. Live WebSocket event broadcast
         """
+        if db.get(ClaimModel, claim_input.claim_id):
+            raise ValueError("Claim ID already exists; replay rejected without changing the original or its review")
         # 1. Deterministic Validation
         findings, has_error, is_duplicate = ClaimValidator.validate_claim(claim_input, db=db)
 
@@ -49,7 +51,11 @@ class ClaimService:
         # If deterministic error present -> CORRECTION
         # Else if duplicate or anomaly detected -> REVIEW
         # Else -> READY
-        if has_error:
+        processing_status = "ERROR" if anomaly_evidence.inference_error else "PROCESSED"
+        if anomaly_evidence.inference_error:
+            category = "REVIEW"
+            triage_score = 100.0
+        elif has_error:
             category = "CORRECTION"
             triage_score = max(55.0, anomaly_evidence.normalized_score)
         elif is_duplicate or anomaly_evidence.is_anomaly or anomaly_evidence.normalized_score >= settings.ANOMALY_THRESHOLD_SCORE:
@@ -73,7 +79,7 @@ class ClaimService:
             claim_amount=claim_input.claim_amount,
             service_lines_count=claim_input.service_lines_count,
             injected_scenario=claim_input.injected_scenario,
-            processing_status="PROCESSED",
+            processing_status=processing_status,
             category=category,
             triage_score=triage_score,
             review_state="PENDING",
@@ -97,7 +103,7 @@ class ClaimService:
         # If flagged for CORRECTION or REVIEW, generate alert
         if category in ("CORRECTION", "REVIEW"):
             alert_desc = (
-                f"Validation issue: {findings[0].message}" if has_error
+                f"Validation issue: {next(f.message for f in findings if not f.passed and f.severity == 'ERROR')}" if has_error
                 else f"Anomaly flagged with priority {triage_score}/100"
             )
             alert_model = AlertModel(
@@ -133,7 +139,7 @@ class ClaimService:
             claim_amount=claim_input.claim_amount,
             service_lines_count=claim_input.service_lines_count,
             injected_scenario=claim_input.injected_scenario,
-            processing_status="PROCESSED",
+            processing_status=processing_status,
             category=category,
             triage_score=triage_score,
             validation_findings=findings,
@@ -167,9 +173,9 @@ class ClaimService:
         if request.action == "ACKNOWLEDGE":
             claim.review_state = "ACKNOWLEDGED"
         elif request.action == "RESOLVE":
+            if not request.disposition:
+                raise ValueError("RESOLVE requires a disposition")
             claim.review_state = "RESOLVED"
-            if request.disposition:
-                claim.category = request.disposition
 
         # Record audit event
         audit_event = AuditEventModel(
