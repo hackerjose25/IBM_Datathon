@@ -1,6 +1,17 @@
 # ClaimGuard History
 
-## 2026-10-17 14:11 +05:30 — Backend frontend integration
+## 2026-10-17 21:10 +05:30 — Frontend and backend unified verification
+
+- Changed: Integrated Developer 1 (`frontend-ui`) and Developer 2 (`backend-engine`) branches into a unified working tree. Unified `.gitignore` across Python, SQLite, Vite, and Node artifacts.
+- Reason: Enable seamless end-to-end operation with both the live React dashboard and the FastAPI/WebSocket backend running concurrently.
+- Validation/evidence:
+  - All 15 automated backend tests passing (`.venv/bin/pytest -v`).
+  - Frontend production build verified (`npx vite build` succeeded in 2.69s).
+  - Live Uvicorn server running on `http://127.0.0.1:8000` with clean SQLite table initialization (`claimguard.db`).
+  - `/health` endpoint returning `HTTP 200 OK` with `status: HEALTHY`.
+  - Live claim ingestion tested via `POST /api/claims`, successfully broadcasting to connected WebSocket clients.
+- Remaining limitations: Final demonstration requires deploying the inference workload to physical IBM LinuxONE (s390x) infrastructure.
+
 
 - Changed: Set the WebSocket default to `ws://localhost:8000/ws/claims` while preserving the `VITE_WS_URL` override; added handling for `CLAIM_SCORED` events and claim upserts.
 - Changed: Reviewer actions now POST to `/api/claims/{claim_id}/action` with `action: RESOLVE`, the selected disposition, reviewer `REV-001`, and the UI notes. Added the Start Synthetic Stream button which POSTs to `/api/stream/start`.
