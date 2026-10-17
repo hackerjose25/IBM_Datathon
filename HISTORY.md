@@ -1,5 +1,22 @@
 # ClaimGuard History
 
+## 2026-10-17 18:10 +05:30 — Pre-trained ML artifact loading, LinuxONE compatibility & latency percentiles
+
+- Changed:
+  - Created [`backend/ml/train.py`](file:///home/dani/Projects/clg/IBM_Datathon/backend/ml/train.py) generating a versioned baseline Isolation Forest artifact [`backend/ml/model.joblib`](file:///home/dani/Projects/clg/IBM_Datathon/backend/ml/model.joblib) with metadata (`version: 1.0.0`, algorithm, parameters, and architecture compatibility).
+  - Updated [`backend/ml/inference.py`](file:///home/dani/Projects/clg/IBM_Datathon/backend/ml/inference.py) to load `model.joblib` from disk by default with graceful fallback to in-memory baseline fitting if the file is absent. Implemented `LatencyTracker` calculating rolling p50, p95, and p99 inference latency percentiles with architecture-independent categorical hashing.
+  - Updated [`.env`](file:///home/dani/Projects/clg/IBM_Datathon/.env) and [`.env.example`](file:///home/dani/Projects/clg/IBM_Datathon/.env.example) with explicit profiles for local testing (`LOCAL_MOCK`) and IBM LinuxONE VM deployment (`IBM_LINUXONE`), documenting host/port bindings, model path, and streaming endpoints.
+  - Updated [`requirements.txt`](file:///home/dani/Projects/clg/IBM_Datathon/requirements.txt) and [`backend/requirements.txt`](file:///home/dani/Projects/clg/IBM_Datathon/backend/requirements.txt) to include `joblib>=1.3.0` and `python-dotenv>=1.0.0`, verifying all dependencies are pure-Python or have s390x wheels.
+  - Enhanced [`backend/main.py`](file:///home/dani/Projects/clg/IBM_Datathon/backend/main.py) `/health` endpoint and streaming routers/services ([`backend/routers/claims.py`](file:///home/dani/Projects/clg/IBM_Datathon/backend/routers/claims.py), [`backend/routers/stream.py`](file:///home/dani/Projects/clg/IBM_Datathon/backend/routers/stream.py), [`backend/services/claim_service.py`](file:///home/dani/Projects/clg/IBM_Datathon/backend/services/claim_service.py), [`backend/services/generator.py`](file:///home/dani/Projects/clg/IBM_Datathon/backend/services/generator.py)) to return `execution_target`, `latency_p50_ms`, `latency_p95_ms`, and full `latency_metrics`.
+  - Updated [`src/components/ClaimDetails.jsx`](file:///home/dani/Projects/clg/IBM_Datathon/src/components/ClaimDetails.jsx) to display `p50` and `p95` metrics in the claim inspector.
+- Reason: Satisfy IBM Z Datathon Track 01 submission criteria for LinuxONE (s390x) production readiness, deterministic ML latency tracking, and deployment configuration clarity.
+- Validation/evidence:
+  - 19 automated pytest tests passing (`.venv/bin/pytest -v`).
+  - Tested clean backend startup with `PYTHONPATH=. .venv/bin/python3 -m backend.main`.
+  - Live HTTP ingestion test confirmed `/health` and WebSocket payload contain `model_loaded_from_disk: true`, `model_version: 1.0.0`, `execution_target`, and computed `p50_ms`/`p95_ms` latency percentiles.
+  - Frontend production build verified (`npm run build` succeeded in 1.38s).
+- Remaining limitations: Final deployment to physical IBM LinuxONE VM will be demonstrated during the hackathon judging session.
+
 ## 2026-10-17 16:19 +05:30 — Environment configuration (.env & .env.example)
 
 - Changed: Created [`.env.example`](file:///home/dani/Projects/clg/IBM_Datathon/.env.example) and local [`.env`](file:///home/dani/Projects/clg/IBM_Datathon/.env) containing centralized variables for backend (`DATABASE_URL`, `EXECUTION_TARGET`, `HOST`, `PORT`, `DUPLICATE_WINDOW_DAYS`, `ANOMALY_THRESHOLD_SCORE`) and frontend (`VITE_API_URL`, `VITE_WS_URL`).

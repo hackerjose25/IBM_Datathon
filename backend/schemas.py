@@ -44,6 +44,8 @@ class AnomalyEvidence(BaseModel):
     normalized_score: float = 0.0     # 0 - 100 scaled anomaly intensity
     factors: List[str] = Field(default_factory=list)
     inference_latency_ms: float = 0.0
+    latency_p50_ms: float = 0.0
+    latency_p95_ms: float = 0.0
     execution_target: str = "LOCAL_MOCK"  # LOCAL_MOCK | IBM_LINUXONE
 
 
@@ -75,6 +77,9 @@ class ClaimRecord(BaseModel):
     triage_score: float = Field(..., ge=0.0, le=100.0, description="0-100 triage priority index")
     validation_findings: List[ValidationFinding] = Field(default_factory=list)
     anomaly_evidence: AnomalyEvidence
+    execution_target: str = "LOCAL_MOCK"
+    latency_p50_ms: float = 0.0
+    latency_p95_ms: float = 0.0
     
     # Review workflow state
     review_state: Literal["PENDING", "ACKNOWLEDGED", "RESOLVED"] = "PENDING"

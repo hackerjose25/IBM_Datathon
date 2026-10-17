@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.config import settings
 from backend.database import init_db
 from backend.routers import claims, stream
+from backend.ml.inference import detector
 
 logging.basicConfig(
     level=logging.INFO,
@@ -45,15 +46,21 @@ app.include_router(stream.router)
 
 @app.get("/health", tags=["Health"])
 def health_check():
-    """Health check endpoint indicating execution target and API state."""
+    """Health check endpoint explicitly returning execution environment target and latency percentiles."""
+    metrics = detector.get_latency_metrics()
     return {
         "status": "HEALTHY",
         "service": settings.PROJECT_NAME,
         "version": settings.VERSION,
         "execution_target": settings.EXECUTION_TARGET,
         "database": settings.DATABASE_URL.split("///")[-1],
+        "model_version": detector.model_version,
+        "model_loaded_from_disk": detector.model_loaded_from_disk,
+        "latency_p50_ms": metrics["p50_ms"],
+        "latency_p95_ms": metrics["p95_ms"],
+        "latency_metrics": metrics,
     }
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("backend.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("backend.main:app", host=settings.HOST, port=settings.PORT, reload=True)

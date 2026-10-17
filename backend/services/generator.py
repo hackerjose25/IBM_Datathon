@@ -5,6 +5,9 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional, List
 from backend.schemas import ClaimInput
 from backend.services.claim_service import ClaimService
+from backend.services.stream_manager import stream_manager
+from backend.ml.inference import detector
+from backend.config import settings
 from backend.database import SessionLocal
 
 DIAGNOSIS_CODES = ["E11.9", "I10", "M54.5", "J45.909", "F41.1", "K21.9"]
@@ -85,9 +88,30 @@ class ClaimStreamGenerator:
                 finally:
                     db.close()
 
+                # Periodically broadcast stream metrics (every 10 claims or on last claim)
+                if (i + 1) % 10 == 0 or (i + 1) == count:
+                    metrics = detector.get_latency_metrics()
+                    await stream_manager.broadcast("STREAM_METRICS", {
+                        "execution_target": settings.EXECUTION_TARGET,
+                        "claims_streamed": i + 1,
+                        "total_target": count,
+                        "latency_p50_ms": metrics["p50_ms"],
+                        "latency_p95_ms": metrics["p95_ms"],
+                        "latency_metrics": metrics,
+                    })
+
                 await asyncio.sleep(delay_seconds)
         finally:
             self._running = False
+            # Final stream metrics broadcast
+            metrics = detector.get_latency_metrics()
+            await stream_manager.broadcast("STREAM_METRICS", {
+                "execution_target": settings.EXECUTION_TARGET,
+                "status": "completed",
+                "latency_p50_ms": metrics["p50_ms"],
+                "latency_p95_ms": metrics["p95_ms"],
+                "latency_metrics": metrics,
+            })
 
     def start(self, count: int = 100, delay_seconds: float = 1.0):
         if not self._running:

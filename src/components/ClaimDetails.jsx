@@ -10,7 +10,11 @@ function evidenceLines(evidence) {
     if (Array.isArray(evidence.factors) && evidence.factors.length > 0) {
       const lines = [...evidence.factors]
       if (evidence.inference_latency_ms != null) {
-        lines.push(`Inference latency: ${evidence.inference_latency_ms} ms (${evidence.execution_target || 'LOCAL_MOCK'})`)
+        let latencyInfo = `Inference latency: ${evidence.inference_latency_ms} ms (${evidence.execution_target || 'LOCAL_MOCK'})`
+        if (evidence.latency_p50_ms != null && evidence.latency_p95_ms != null && (evidence.latency_p50_ms > 0 || evidence.latency_p95_ms > 0)) {
+          latencyInfo += ` [p50: ${evidence.latency_p50_ms} ms, p95: ${evidence.latency_p95_ms} ms]`
+        }
+        lines.push(latencyInfo)
       }
       return lines
     }

@@ -121,7 +121,7 @@ class ClaimService:
 
         db.commit()
 
-        # Build output record
+        # Build output record with explicit execution target and latency percentiles
         record = ClaimRecord(
             claim_id=claim_input.claim_id,
             patient_id=claim_input.patient_id,
@@ -138,6 +138,9 @@ class ClaimService:
             triage_score=triage_score,
             validation_findings=findings,
             anomaly_evidence=anomaly_evidence,
+            execution_target=settings.EXECUTION_TARGET,
+            latency_p50_ms=anomaly_evidence.latency_p50_ms,
+            latency_p95_ms=anomaly_evidence.latency_p95_ms,
             review_state="PENDING",
             created_at=datetime.now(timezone.utc).isoformat(),
         )

@@ -87,17 +87,28 @@ Names were not supplied in the proposal; the member labels are placeholders.
 
 ## Getting started
 
-This is currently a documentation package, not a runnable application. The proposal does not specify repository layout, dependency versions, endpoint contracts, environment variables, or executable setup commands.
+### Environment setup & configuration
 
-When implementation begins:
+ClaimGuard supports dual execution profiles configured via [`.env`](file:///home/dani/Projects/clg/IBM_Datathon/.env) (templated in [`.env.example`](file:///home/dani/Projects/clg/IBM_Datathon/.env.example)):
+- **`LOCAL_MOCK`**: Local development, mock testing, and component verification.
+- **`IBM_LINUXONE`**: Deployment to IBM LinuxONE (s390x) virtual machines with genuine ML execution.
 
-1. Define the normalized claim schema, rule catalog, review state transitions, and scoring contract.
-2. Establish the Python and frontend projects and record verified dependency versions.
-3. Prepare synthetic fixtures, train and version the model with its preprocessing pipeline.
-4. Build ingestion, validation, persistence, scoring, and WebSocket updates.
-5. Verify LinuxONE architecture and dependency compatibility; deploy and measure actual inference.
-6. Connect the dashboard and validate the end-to-end reviewer workflow.
-7. Replace this section with tested installation, configuration, training, startup, test, and deployment commands.
+```bash
+# 1. Python Virtual Environment Setup (s390x and x86_64 compatible)
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# 2. Pre-trained Model Artifact
+# Ensure the versioned pre-trained Isolation Forest artifact exists (or generate it)
+python3 backend/ml/train.py
+
+# 3. Run Backend Server (FastAPI + WebSockets)
+PYTHONPATH=. uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload
+
+# 4. Run Test Suite
+pytest -v
+```
 
 ### Frontend starter
 

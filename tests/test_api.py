@@ -6,6 +6,12 @@ def test_health_check(client):
     data = response.json()
     assert data["status"] == "HEALTHY"
     assert data["service"] == "ClaimGuard"
+    assert data["execution_target"] in ("LOCAL_MOCK", "IBM_LINUXONE")
+    assert "latency_p50_ms" in data
+    assert "latency_p95_ms" in data
+    assert "latency_metrics" in data
+    assert "model_version" in data
+    assert "model_loaded_from_disk" in data
 
 def test_ingest_normal_claim(client):
     payload = {
@@ -27,6 +33,11 @@ def test_ingest_normal_claim(client):
     assert data["category"] == "READY"
     assert data["triage_score"] <= 50.0
     assert data["review_state"] == "PENDING"
+    assert data["execution_target"] in ("LOCAL_MOCK", "IBM_LINUXONE")
+    assert "latency_p50_ms" in data
+    assert "latency_p95_ms" in data
+    assert data["anomaly_evidence"]["execution_target"] in ("LOCAL_MOCK", "IBM_LINUXONE")
+    assert data["anomaly_evidence"]["latency_p50_ms"] >= 0.0
 
 def test_ingest_missing_field_routes_to_correction(client):
     payload = {
@@ -46,6 +57,7 @@ def test_ingest_missing_field_routes_to_correction(client):
     data = response.json()
     assert data["category"] == "CORRECTION"
     assert any(not f["passed"] for f in data["validation_findings"])
+    assert data["execution_target"] in ("LOCAL_MOCK", "IBM_LINUXONE")
 
 def test_ingest_high_amount_routes_to_review(client):
     payload = {
@@ -65,6 +77,7 @@ def test_ingest_high_amount_routes_to_review(client):
     data = response.json()
     assert data["category"] == "REVIEW"
     assert data["triage_score"] >= 60.0
+    assert data["execution_target"] in ("LOCAL_MOCK", "IBM_LINUXONE")
 
 def test_reviewer_action_workflow(client):
     # Ingest claim first
@@ -114,4 +127,5 @@ def test_reviewer_action_workflow(client):
     assert detail_res.status_code == 200
     detail = detail_res.json()
     assert detail["claim"]["review_state"] == "RESOLVED"
+    assert detail["claim"]["execution_target"] in ("LOCAL_MOCK", "IBM_LINUXONE")
     assert len(detail["audit_events"]) >= 3  # INGEST, ACKNOWLEDGE, RESOLVE

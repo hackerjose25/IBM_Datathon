@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from backend.database import get_db
+from backend.config import settings
 from backend.schemas import (
     ClaimInput,
     ClaimRecord,
@@ -75,6 +76,9 @@ def list_claims(
             triage_score=c.triage_score,
             validation_findings=findings,
             anomaly_evidence=anomaly_evidence,
+            execution_target=anomaly_evidence.execution_target or settings.EXECUTION_TARGET,
+            latency_p50_ms=anomaly_evidence.latency_p50_ms,
+            latency_p95_ms=anomaly_evidence.latency_p95_ms,
             review_state=c.review_state,
             created_at=c.created_at,
         ))
@@ -132,6 +136,9 @@ def get_claim(claim_id: str, db: Session = Depends(get_db)):
             triage_score=c.triage_score,
             validation_findings=findings,
             anomaly_evidence=anomaly_evidence,
+            execution_target=anomaly_evidence.execution_target or settings.EXECUTION_TARGET,
+            latency_p50_ms=anomaly_evidence.latency_p50_ms,
+            latency_p95_ms=anomaly_evidence.latency_p95_ms,
             review_state=c.review_state,
             created_at=c.created_at,
         ),
