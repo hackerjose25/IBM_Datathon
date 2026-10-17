@@ -1,5 +1,21 @@
 # ClaimGuard History
 
+## 2026-10-17 14:11 +05:30 — Backend frontend integration
+
+- Changed: Set the WebSocket default to `ws://localhost:8000/ws/claims` while preserving the `VITE_WS_URL` override; added handling for `CLAIM_SCORED` events and claim upserts.
+- Changed: Reviewer actions now POST to `/api/claims/{claim_id}/action` with `action: RESOLVE`, the selected disposition, reviewer `REV-001`, and the UI notes. Added the Start Synthetic Stream button which POSTs to `/api/stream/start`.
+- Changed: Claim details render deterministic validation findings and ML anomaly evidence separately. Backend `ERROR` statuses render as ERROR and are excluded from the READY count. Updated README integration instructions.
+- Validation/evidence: Production build succeeded with a Node compatibility shim for this sandbox's blocked native `realpathSync`; `git diff --check` passed. `http://127.0.0.1:8000/openapi.json` returned ECONNREFUSED and backend source is absent from this checkout, so live endpoint/WebSocket behavior could not be confirmed. Re-ran `npm install --force` to restore an incomplete local `lucide-react` install (0 reported vulnerabilities).
+- Remaining limitations: `npm run build` itself hits sandbox EPERM in Vite's Windows native `realpathSync`; the equivalent Vite build completed using the compatibility shim. End-to-end behavior still depends on the backend being reachable and honoring the supplied contract.
+
+## 2026-10-17 13:32 +05:30 — Minimal frontend and streaming contract
+
+- Changed: Added a React/Vite/Tailwind dashboard with a live claims table, claim detail panel, rule/anomaly/priority presentation, READY/CORRECTION/REVIEW reviewer actions, connection status, and reconnecting WebSocket client. Added package scripts, a Node.js engine constraint, ignored generated/local files, and an npm lockfile.
+- Changed: Added `VITE_WS_URL` and `VITE_API_URL` configuration defaults, the proposed v1 WebSocket event and normalized claim contract, and local frontend startup instructions to README.md.
+- Decision: The feed begins empty and consumes full-claim `claim.upserted` events, replacing rows by stable `claim_id`. Reviewer actions post a disposition to `/api/claims/{claim_id}/review`. Both are proposed integration points pending backend confirmation.
+- Validation/evidence: `npm install` completed successfully (79 packages added, 0 reported vulnerabilities); `git diff --check` passed. No tests or production build were run.
+- Remaining limitations: Backend endpoints, WebSocket server, review persistence, and CORS configuration do not exist yet. The production build and UI behavior have not been verified against a running backend.
+
 This file records source-backed planning decisions and subsequent verified changes. It is not a reconstructed Git history. The supplied proposal contains no commit log, release history, deployment evidence, or completed test results.
 
 ## 2026-10-17 — Initial documentation package

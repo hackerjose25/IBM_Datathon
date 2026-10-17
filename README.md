@@ -99,6 +99,24 @@ When implementation begins:
 6. Connect the dashboard and validate the end-to-end reviewer workflow.
 7. Replace this section with tested installation, configuration, training, startup, test, and deployment commands.
 
+### Frontend starter
+
+The initial dashboard lives at the repository root and uses React, Vite, and Tailwind CSS. It requires Node.js 20.19+ or 22.12+. Run `npm install`, then `npm run dev` from the repository root. Configure `VITE_WS_URL` (default `ws://localhost:8000/ws/claims`) and `VITE_API_URL` (default `http://localhost:8000`) in a local `.env` file when the backend uses different addresses. Do not commit secrets in environment files.
+
+The dashboard starts empty and adds or replaces claims as it receives WebSocket events. Click **Start Synthetic Stream** to call `POST /api/stream/start`. Reviewer buttons call `POST /api/claims/{claim_id}/action` with `action: "RESOLVE"`, the selected disposition (`READY`, `CORRECTION`, or `REVIEW`), `reviewer_id: "REV-001"`, and UI notes. The frontend expects a successful JSON response containing either a `review` object or the review object itself.
+
+### Initial frontend API and event contract (v1)
+
+The frontend connects to `ws://localhost:8000/ws/claims` by default. It handles `CLAIM_SCORED` events (claim fields may be in `data` or nested under `data.claim`), `claim.upserted`, review updates, and stream errors. Scored claim events are replaced by stable `claim_id`. The client reconnects with exponential backoff.
+
+Normalized claims use stable `claim_id`, `received_at`, `updated_at`, and nested objects:
+
+- `claim`: synthetic `patient_id`, `provider_id`, ISO `service_date`, numeric `claim_amount`, and optional `diagnosis_codes`, `procedure_codes`, `place_of_service`.
+- `decision`: `category` (`READY`, `CORRECTION`, or `REVIEW`), `status` (`pending`, `scored`, or `error`), integer `triage_priority` from 0–100 when available, deterministic `validation_findings`, ML `anomaly_evidence`, and optional `recommended_action`.
+- `review`: `state` (`pending`, `in_progress`, or `resolved`), nullable `disposition` (`READY`, `CORRECTION`, or `REVIEW`), nullable `reviewer_id`, and nullable `updated_at`.
+
+When `decision.status` is `error` (including backend `ERROR` status), the UI shows an ERROR badge and excludes the claim from the READY count. Deterministic `validation_findings` and ML `anomaly_evidence` are shown in separate detail sections. The triage index is an operational priority, not a calibrated fraud or denial probability.
+
 ## Evaluation and acceptance checklist
 
 - [ ] Synthetic claims continuously enter the application.
