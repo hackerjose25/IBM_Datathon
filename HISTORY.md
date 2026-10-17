@@ -18,6 +18,48 @@
 
 This file records source-backed planning decisions and subsequent verified changes. It is not a reconstructed Git history. The supplied proposal contains no commit log, release history, deployment evidence, or completed test results.
 
+## 2026-10-17 — Live Uvicorn backend server launch & CORS verification
+
+- Changed:
+  - Verified and refined CORS configuration in [`backend/config.py`](file:///home/dani/Projects/clg/IBM_Datathon/backend/config.py) to explicitly allow `http://localhost:5173` and `http://127.0.0.1:5173` for the Vite frontend development server.
+  - Launched live development server on `http://127.0.0.1:8000` with hot-reload enabled (`uvicorn backend.main:app --reload --port 8000`).
+  - Verified clean database schema initialization for `claimguard.db` during lifespan startup.
+- Reason: Provide live HTTP REST and WebSocket streaming endpoints to Developer 1's frontend.
+- Validation/evidence:
+  - Verified `/health` returned HTTP 200 with `status: HEALTHY` and `database: claimguard.db`.
+  - Tested live claim ingestion with `POST /api/claims`, returning `201 Created` with validation findings and Isolation Forest anomaly inference.
+- Remaining limitations: Running with `EXECUTION_TARGET=LOCAL_MOCK` in local development environment.
+
+## 2026-10-17 — Backend & Ingestion Engine implementation (Developer 2)
+
+- Changed:
+  - Created [`.gitignore`](file:///home/dani/Projects/clg/IBM_Datathon/.gitignore) ignoring virtual environments, SQLite databases, and test caches.
+  - Implemented [`backend/requirements.txt`](file:///home/dani/Projects/clg/IBM_Datathon/backend/requirements.txt) and [`backend/config.py`](file:///home/dani/Projects/clg/IBM_Datathon/backend/config.py) with environment flags (`EXECUTION_TARGET`, `DATABASE_URL`, `DUPLICATE_WINDOW_DAYS`, `ANOMALY_THRESHOLD_SCORE`).
+  - Defined database models in [`backend/database.py`](file:///home/dani/Projects/clg/IBM_Datathon/backend/database.py) and [`backend/models.py`](file:///home/dani/Projects/clg/IBM_Datathon/backend/models.py) using SQLAlchemy: `claims`, `validation_findings`, `alerts`, and `audit_trail`.
+  - Built JSON schema contract in [`backend/schemas.py`](file:///home/dani/Projects/clg/IBM_Datathon/backend/schemas.py) (`ClaimInput`, `ClaimRecord`, `ValidationFinding`, `AnomalyEvidence`, `ReviewerActionRequest`, `ReviewerActionResponse`, `WebSocketEnvelope`).
+  - Implemented deterministic validator in [`backend/rules/validator.py`](file:///home/dani/Projects/clg/IBM_Datathon/backend/rules/validator.py) covering missing fields, amount checks, line item counts, date validity, and duplicate submission checks within a configurable window.
+  - Implemented baseline ML Isolation Forest scoring and latency tracking in [`backend/ml/inference.py`](file:///home/dani/Projects/clg/IBM_Datathon/backend/ml/inference.py) with feature extraction (`log_amount`, `lines`, `provider_hash`, `procedure_hash`) and `LOCAL_MOCK` / `IBM_LINUXONE` target reporting.
+  - Built orchestration and event services: [`backend/services/stream_manager.py`](file:///home/dani/Projects/clg/IBM_Datathon/backend/services/stream_manager.py) (WebSocket connection & broadcast manager), [`backend/services/claim_service.py`](file:///home/dani/Projects/clg/IBM_Datathon/backend/services/claim_service.py) (end-to-end pipeline, priority score scaling, category routing, and audit events), and [`backend/services/generator.py`](file:///home/dani/Projects/clg/IBM_Datathon/backend/services/generator.py) (synthetic streaming generator).
+  - Built FastAPI application and endpoints in [`backend/main.py`](file:///home/dani/Projects/clg/IBM_Datathon/backend/main.py), [`backend/routers/claims.py`](file:///home/dani/Projects/clg/IBM_Datathon/backend/routers/claims.py), and [`backend/routers/stream.py`](file:///home/dani/Projects/clg/IBM_Datathon/backend/routers/stream.py):
+    - `POST /api/claims` (ingest single claim)
+    - `GET /api/claims` (query recent claims with optional category filtering)
+    - `GET /api/claims/{claim_id}` (claim detail with findings and audit trail)
+    - `POST /api/claims/{claim_id}/action` (reviewer acknowledgement / resolution disposition)
+    - `POST /api/stream/start`, `POST /api/stream/stop`, `GET /api/stream/status` (synthetic claim generator controls)
+    - `/ws/claims` (real-time WebSocket feed)
+    - `GET /health` (system and execution target health status)
+  - Created comprehensive test suite in [`tests/test_validator.py`](file:///home/dani/Projects/clg/IBM_Datathon/tests/test_validator.py), [`tests/test_inference.py`](file:///home/dani/Projects/clg/IBM_Datathon/tests/test_inference.py), [`tests/test_api.py`](file:///home/dani/Projects/clg/IBM_Datathon/tests/test_api.py), and [`tests/test_stream.py`](file:///home/dani/Projects/clg/IBM_Datathon/tests/test_stream.py).
+- Reason: Establish Developer 2 backend capabilities to support real-time claims ingestion, deterministic rule validation, mock ML inference, and WebSocket streaming without blocking Developer 1 (Frontend).
+- Validation/evidence: 15 out of 15 automated pytest tests passing (`pytest -v`), plus end-to-end SQLite smoke test verifying persistence of processed claims and audit log entries.
+- Remaining limitations: ML model uses synthetic cold-start Isolation Forest baseline; deployment to physical IBM LinuxONE (s390x) VM remains planned for Phase 2/3.
+
+## 2026-10-17 — Schema contract and multi-agent development alignment
+
+- Changed: Defined canonical JSON schemas for claims, validation findings, anomaly evidence, reviewer disposition actions, and WebSocket broadcast events. Established parallel development boundaries for Developer 1 (Frontend / Live UI) and Developer 2 (Backend / Ingestion & Inference).
+- Reason: Enable concurrent frontend and backend construction without breaking changes, satisfying AGENTS.md requirements for stable identifiers, explicit error states, separate deterministic vs anomaly findings, and non-negotiable human-in-the-loop audit trails.
+- Validation/evidence: Schemas checked against specifications in `AGENTS.md` and `README.md`.
+- Remaining limitations: Schema contracts are defined conceptually; code implementations in Pydantic / TypeScript types are pending developer assignment.
+
 ## 2026-10-17 — Initial documentation package
 
 Prepared README.md, HISTORY.md, and AGENTS.md from `IBM datathon.pdf` at the user's request.
