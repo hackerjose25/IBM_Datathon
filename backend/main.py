@@ -1,0 +1,59 @@
+"""FastAPI application entrypoint for ClaimGuard."""
+import logging
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from backend.config import settings
+from backend.database import init_db
+from backend.routers import claims, stream
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
+logger = logging.getLogger("claimguard")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan context: initialize database on startup."""
+    logger.info("Initializing ClaimGuard database schemas...")
+    init_db()
+    logger.info("Database schemas initialized successfully.")
+    yield
+    logger.info("ClaimGuard shutting down.")
+
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION,
+    description="Real-Time AI Healthcare Claims Risk Intelligence API",
+    lifespan=lifespan,
+)
+
+# Enable CORS for frontend Vite development server
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include Routers
+app.include_router(claims.router, prefix=settings.API_PREFIX)
+app.include_router(stream.router)
+
+@app.get("/health", tags=["Health"])
+def health_check():
+    """Health check endpoint indicating execution target and API state."""
+    return {
+        "status": "HEALTHY",
+        "service": settings.PROJECT_NAME,
+        "version": settings.VERSION,
+        "execution_target": settings.EXECUTION_TARGET,
+        "database": settings.DATABASE_URL.split("///")[-1],
+    }
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("backend.main:app", host="0.0.0.0", port=8000, reload=True)
