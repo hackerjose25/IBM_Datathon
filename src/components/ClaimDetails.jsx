@@ -6,9 +6,19 @@ const ACTIONS = ['READY', 'CORRECTION', 'REVIEW']
 function evidenceLines(evidence) {
   if (evidence == null) return []
   if (Array.isArray(evidence)) return evidence.map((item) => typeof item === 'string' ? item : item && typeof item === 'object' ? item.message || item.description || JSON.stringify(item) : String(item))
-  if (typeof evidence === 'object') return Object.entries(evidence).map(([key, value]) => `${key.replaceAll('_', ' ')}: ${typeof value === 'object' ? JSON.stringify(value) : value}`)
+  if (typeof evidence === 'object') {
+    if (Array.isArray(evidence.factors) && evidence.factors.length > 0) {
+      const lines = [...evidence.factors]
+      if (evidence.inference_latency_ms != null) {
+        lines.push(`Inference latency: ${evidence.inference_latency_ms} ms (${evidence.execution_target || 'LOCAL_MOCK'})`)
+      }
+      return lines
+    }
+    return Object.entries(evidence).map(([key, value]) => `${key.replaceAll('_', ' ')}: ${typeof value === 'object' ? JSON.stringify(value) : value}`)
+  }
   return [String(evidence)]
 }
+
 
 export default function ClaimDetails({ claim, onReview }) {
   const [saving, setSaving] = useState(false)
@@ -51,13 +61,14 @@ export default function ClaimDetails({ claim, onReview }) {
           <div><dt>Patient</dt><dd>{data.patient_id || '—'}</dd></div>
           <div><dt>Service date</dt><dd>{data.service_date || '—'}</dd></div>
           <div><dt>Claim amount</dt><dd>{typeof data.claim_amount === 'number' ? data.claim_amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) : '—'}</dd></div>
-          <div><dt>Diagnosis codes</dt><dd>{data.diagnosis_codes?.join(', ') || '—'}</dd></div>
-          <div><dt>Procedure codes</dt><dd>{data.procedure_codes?.join(', ') || '—'}</dd></div>
+          <div><dt>Diagnosis codes</dt><dd>{data.diagnosis_codes?.join(', ') || data.diagnosis_code || '—'}</dd></div>
+          <div><dt>Procedure codes</dt><dd>{data.procedure_codes?.join(', ') || data.procedure_code || '—'}</dd></div>
         </dl>
       </div>
       <div className="detail-section">
         <div className="section-label"><FileWarning size={15} /><h3>Deterministic validation findings</h3></div>
-        {findings.length ? <ul className="findings-list">{findings.map((finding, index) => <li key={`${finding.code || finding.rule_code || 'finding'}-${index}`}><strong>{finding.code || finding.rule_code || finding.severity || 'Finding'}</strong><span>{finding.message || finding.description || JSON.stringify(finding)}</span></li>)}</ul> : <p className="muted">No validation findings reported.</p>}
+        {findings.length ? <ul className="findings-list">{findings.map((finding, index) => <li key={`${finding.rule_id || finding.code || finding.rule_code || 'finding'}-${index}`}><strong>{finding.rule_id || finding.code || finding.rule_code || finding.severity || 'Finding'}</strong><span>{finding.message || finding.description || JSON.stringify(finding)}</span></li>)}</ul> : <p className="muted">No validation findings reported.</p>}
+
       </div>
       <div className="detail-section">
         <div className="section-label"><FileWarning size={15} /><h3>ML anomaly evidence</h3></div>

@@ -11,10 +11,11 @@ function normalizeScoredEvent(event) {
   const payload = event.data ?? event.payload ?? event.claim ?? event
   const rawClaim = payload.claim ?? payload.claim_data ?? payload
   const decision = payload.decision ?? rawClaim.decision ?? payload.scoring ?? {}
-  const statusValue = decision.status ?? payload.status ?? rawClaim.status ?? payload.scoring_status
+  const statusValue = decision.status ?? payload.status ?? rawClaim.status ?? payload.scoring_status ?? rawClaim.processing_status
   const status = typeof statusValue === 'string' ? statusValue.toLowerCase() : 'scored'
   const validationFindings = decision.validation_findings ?? payload.validation_findings ?? rawClaim.validation_findings ?? decision.rule_findings ?? []
   const anomalyEvidence = decision.anomaly_evidence ?? payload.anomaly_evidence ?? rawClaim.anomaly_evidence ?? decision.anomaly ?? null
+  const triageScore = decision.triage_priority ?? payload.triage_priority ?? rawClaim.triage_priority ?? payload.triage_score ?? payload.priority_score ?? null
   return {
     ...rawClaim,
     claim_id: rawClaim.claim_id ?? rawClaim.claimId ?? payload.claim_id ?? payload.claimId ?? event.claim_id,
@@ -23,14 +24,17 @@ function normalizeScoredEvent(event) {
       ...decision,
       status,
       category: decision.category ?? payload.category ?? rawClaim.category ?? payload.recommendation ?? null,
-      triage_priority: decision.triage_priority ?? payload.triage_priority ?? rawClaim.triage_priority ?? payload.priority_score ?? null,
+      triage_priority: triageScore != null ? Number(triageScore) : null,
       rule_findings: Array.isArray(validationFindings) ? validationFindings : [],
       anomaly_evidence: anomalyEvidence,
-      anomaly_flagged: decision.anomaly_flagged ?? payload.anomaly_flagged ?? rawClaim.anomaly_flagged ?? decision.anomaly?.flagged ?? (typeof anomalyEvidence === 'boolean' ? anomalyEvidence : anomalyEvidence?.flagged) ?? null,
+      anomaly_flagged: decision.anomaly_flagged ?? payload.anomaly_flagged ?? rawClaim.anomaly_flagged ?? decision.anomaly?.flagged ?? (typeof anomalyEvidence === 'boolean' ? anomalyEvidence : anomalyEvidence?.is_anomaly ?? anomalyEvidence?.flagged) ?? null,
       anomaly: decision.anomaly ?? (anomalyEvidence != null ? {} : null),
       recommended_action: decision.recommended_action ?? payload.recommended_action ?? rawClaim.recommended_action,
     },
-    review: rawClaim.review ?? payload.review ?? { state: 'pending', disposition: null },
+    review: rawClaim.review ?? payload.review ?? {
+      state: (rawClaim.review_state || 'pending').toLowerCase(),
+      disposition: rawClaim.reviewer_decision?.decision || null,
+    },
   }
 }
 
@@ -42,6 +46,20 @@ export default function App() {
   const [streamStarted, setStreamStarted] = useState(false)
   const { connection, lastMessageAt } = useClaimsSocket()
   const selectedClaim = useMemo(() => claims.find((claim) => claim.claim_id === selectedId) || null, [claims, selectedId])
+
+  // Load existing claims on initial mount
+  useEffect(() => {
+    fetch(`${API_URL}/api/claims`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const normalized = data.map((c) => normalizeScoredEvent({ event: 'CLAIM_SCORED', data: c }))
+          setClaims(normalized)
+          setSelectedId((current) => current || normalized[0]?.claim_id)
+        }
+      })
+      .catch((err) => console.warn('Could not load initial claims:', err))
+  }, [])
 
   const applyEvent = useCallback((event) => {
     const type = event?.type ?? event?.event_type ?? event?.event
@@ -56,12 +74,18 @@ export default function App() {
         return next
       })
       setSelectedId((current) => current || incoming.claim_id)
-    } else if ((type === 'review.updated' || type === 'REVIEW_UPDATED') && event.data?.claim_id) {
-      setClaims((current) => current.map((claim) => claim.claim_id === event.data.claim_id ? { ...claim, review: event.data.review } : claim))
+    } else if ((type === 'review.updated' || type === 'REVIEW_UPDATED' || type === 'CLAIM_ACTIONED') && event.data?.claim_id) {
+      const updatedReview = event.data.review ?? {
+        state: (event.data.review_state || 'resolved').toLowerCase(),
+        disposition: event.data.disposition,
+        reviewer_id: event.data.reviewer_id,
+      }
+      setClaims((current) => current.map((claim) => (claim.claim_id === event.data.claim_id ? { ...claim, review: updatedReview } : claim)))
     } else if (type === 'stream.error' || type === 'STREAM_ERROR') {
       setStreamError(event.data?.message || 'The claim stream reported an error')
     }
   }, [])
+
 
   useEffect(() => {
     const listener = (event) => applyEvent(event.detail)
