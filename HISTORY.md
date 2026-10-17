@@ -1,5 +1,12 @@
 # ClaimGuard History
 
+## 2026-10-18 — Vercel linked to GitHub main
+
+- Connected the existing Vercel project to hackerjose25/IBM_Datathon, verified main as the production branch, and set the project root to public-site.
+- Saved VITE_API_URL and VITE_WS_URL in Vercel's production environment so Git-triggered builds retain the existing HTTPS/WSS LinuxONE connection. Added public-site/README.md with the deployment contract and duplicate-source-folder limitation.
+- The following main push serves as the automatic Git deployment verification trigger; production outcome is checked against its commit SHA before handoff. No backend deployment or API behavior change is involved.
+
+
 ## 2026-10-18 — Main branch handoff
 
 - User requested the complete current build on main in hackerjose25/IBM_Datathon. Fetched origin and confirmed the integrated history includes the existing remote main without requiring a force update.

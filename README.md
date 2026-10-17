@@ -196,3 +196,5 @@ The source names IBM AI on IBM Z, IBM Machine Learning for z/OS, CMS Synthetic M
 Public HTTPS hosting preparation and the pending network-exposure approval are documented in [docs/PUBLIC-HOSTING.md](docs/PUBLIC-HOSTING.md). The Sites registration is not a deployed public website yet.
 
 Frontend production URL: [ClaimGuard on Vercel](https://claimguard-dun.vercel.app). The public landing page and direct LinuxONE HTTPS/WSS dashboard connection are verified, including a 100-claim stream and saved review after reload. No local tunnel is required. Automatic API startup, process recovery and restoration of the approved web ports are enabled. Process-failure recovery was tested; a full VM reboot was not. See the hosting guide. See [public hosting status](docs/PUBLIC-HOSTING.md).
+
+Vercel is linked to GitHub main with Root Directory set to public-site. Production API/WebSocket endpoints are saved in Vercel. See [frontend deployment instructions](public-site/README.md).
