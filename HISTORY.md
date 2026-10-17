@@ -1,6 +1,12 @@
 # ClaimGuard History
 
-## 2026-10-17 21:20 +05:30 — Comprehensive end-to-end testing and frontend wiring
+## 2026-10-17 16:19 +05:30 — Environment configuration (.env & .env.example)
+
+- Changed: Created [`.env.example`](file:///home/dani/Projects/clg/IBM_Datathon/.env.example) and local [`.env`](file:///home/dani/Projects/clg/IBM_Datathon/.env) containing centralized variables for backend (`DATABASE_URL`, `EXECUTION_TARGET`, `HOST`, `PORT`, `DUPLICATE_WINDOW_DAYS`, `ANOMALY_THRESHOLD_SCORE`) and frontend (`VITE_API_URL`, `VITE_WS_URL`).
+- Changed: Updated [`backend/config.py`](file:///home/dani/Projects/clg/IBM_Datathon/backend/config.py) to automatically load variables from `.env` using `python-dotenv`.
+- Reason: Allow flexible local configuration and decouple deployment addresses without exposing environment variables or hardcoding parameters in source code.
+- Validation/evidence: Verified `.env` is ignored by Git, `.env.example` is tracked, and all 15 automated pytest tests pass.
+
 
 - Changed: Refined [`src/App.jsx`](file:///home/dani/Projects/clg/IBM_Datathon/src/App.jsx) and [`src/components/ClaimDetails.jsx`](file:///home/dani/Projects/clg/IBM_Datathon/src/components/ClaimDetails.jsx) to directly support backend contract fields: `triage_score`, `anomaly_evidence.factors`, `inference_latency_ms`, single `diagnosis_code`/`procedure_code`, `rule_id` findings, and initial claims loading on mount via `GET /api/claims`.
 - Reason: Complete alignment across React frontend components and FastAPI REST/WebSocket backend streams.
